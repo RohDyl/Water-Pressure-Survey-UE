@@ -82,6 +82,31 @@
       border-color: #2980b9;
     }
 
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #d0dce8;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      outline: none;
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #2980b9;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: #6b7c93;
+      margin-top: 4px;
+    }
+
     .radio-group {
       display: flex;
       gap: 12px;
@@ -151,7 +176,6 @@
       cursor: not-allowed;
     }
 
-    /* Success / Error Messages */
     .message {
       display: none;
       padding: 14px 18px;
@@ -201,7 +225,6 @@
 
     <form id="surveyForm">
 
-      <!-- Address -->
       <div class="form-group">
         <label for="address">
           Property Address <span class="required">*</span>
@@ -209,7 +232,6 @@
         <input type="text" id="address" placeholder="e.g. 12 Maple Street, Springfield, SP1 2AB" required="">
       </div>
 
-      <!-- Low Water Pressure -->
       <div class="form-group">
         <label>
           Do you experience low water pressure? <span class="required">*</span>
@@ -230,7 +252,6 @@
         </div>
       </div>
 
-      <!-- Feed Direction -->
       <div class="form-group">
         <label>
           Does your water feed from above or below your property? <span class="required">*</span>
@@ -257,6 +278,12 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label for="comments">Additional Comments <span style="color:#6b7c93; font-weight:400;">(optional)</span></label>
+        <textarea id="comments" placeholder="Please share any additional details about your water supply issues..." maxlength="500"></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 500</div>
+      </div>
+
       <button type="submit" id="submitBtn">
         <span id="btnText">Submit Survey</span>
         <div class="spinner" id="spinner"></div>
@@ -273,7 +300,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby--t4CZTH0kCry92VrqLh5jBnpVJdC0UJmTIzripqmeehNBHn2sbajnaoBtkXCrLFH_g/exec"; // 🔁 Replace with your Google Apps Script URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_fQmVe4MklYbjXpvf6DudDxZSqicCKk-kbkNw1Xci2vLslY7a-6BY-e8aDlxh8uNzHA/exec";
 
     const form = document.getElementById("surveyForm");
     const submitBtn = document.getElementById("submitBtn");
@@ -281,41 +308,45 @@
     const spinner = document.getElementById("spinner");
     const successMsg = document.getElementById("successMsg");
     const errorMsg = document.getElementById("errorMsg");
+    const commentsField = document.getElementById("comments");
+    const charCount = document.getElementById("charCount");
+
+    commentsField.addEventListener("input", function() {
+      charCount.textContent = commentsField.value.length;
+    });
 
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      // Gather values
       const address = document.getElementById("address").value.trim();
       const lowPressure = document.querySelector('input[name="lowPressure"]:checked')?.value;
       const feedDirection = document.querySelector('input[name="feedDirection"]:checked')?.value;
+      const comments = commentsField.value.trim();
 
-      // Basic validation
       if (!address || !lowPressure || !feedDirection) {
         alert("Please complete all fields before submitting.");
         return;
       }
 
-      // Show loading state
       submitBtn.disabled = true;
       btnText.style.display = "none";
       spinner.style.display = "block";
       successMsg.style.display = "none";
       errorMsg.style.display = "none";
 
-      const payload = { address, lowPressure, feedDirection };
+      const payload = { address, lowPressure, feedDirection, comments };
 
       try {
         const response = await fetch(SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          mode: "no-cors" // Required for Google Apps Script
+          mode: "no-cors"
         });
 
-        // no-cors means we can't read the response, but if no error thrown = success
         successMsg.style.display = "block";
         form.reset();
+        charCount.textContent = "0";
 
       } catch (err) {
         errorMsg.style.display = "block";
@@ -327,6 +358,5 @@
       }
     });
   </script>
-
 
 </body></html>
